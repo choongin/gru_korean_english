@@ -4,11 +4,11 @@ import torch.optim as optim
 
 # 1. 한국어-영어 데이터셋 pair 생성
 data = [
-    ("안녕하세요", "_Hello"),
-    ("감사합니다", "_Thank you"),
-    ("좋은 하루 되세요", "_Have a nice day"),
-    ("반갑습니다", "_Nice to meet you"),
-    ("행운을 빌어요", "_Good luck")
+    ("안녕하세요", "Hello"),
+    ("감사합니다", "Thank you"),
+    ("좋은 하루 되세요", "Have a nice day"),
+    ("반갑습니다", "Nice to meet you"),
+    ("행운을 빌어요", "Good luck")
 ]
 
 
@@ -101,7 +101,7 @@ def translate(input_sentence):
             input_tensor = torch.tensor([[kor_char2index[char]]])
             _, encoder_hidden = encoder(input_tensor, encoder_hidden)
 
-        translated = "_"  # '_'를 시작 토큰으로 가정하고 결과 문자열에 추가
+        translated = "H"  # 'H'를 시작 토큰으로 가정하고 결과 문자열에 추가
         decoder_input = torch.tensor([[eng_char2index["H"]]])
         decoder_hidden = encoder_hidden
 
