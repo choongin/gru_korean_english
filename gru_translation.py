@@ -41,7 +41,8 @@ data = [
     ("감사합니다", "Thank you"),
     ("좋은 하루 되세요", "Have a nice day"),
     ("반갑습니다", "Nice to meet you"),
-    ("행운을 빌어요", "Good luck")
+    ("행운을 빌어요", "Good luck"),
+    ("행운 되세요", "Haveluck")
 ]
 
 # 문자 집합 생성
