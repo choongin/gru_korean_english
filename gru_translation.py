@@ -2,14 +2,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-# 1. 한국어-영어 데이터셋 pair 생성
-data = [
-    ("안녕하세요", "Hello"),
-    ("감사합니다", "Thank you"),
-    ("좋은 하루 되세요", "Have a nice day"),
-    ("반갑습니다", "Nice to meet you"),
-    ("행운을 빌어요", "Good luck")
-]
 
 
 # 2. GRU 네트워크(encoder, decoder) 구조 생성
@@ -43,15 +35,21 @@ class Decoder(nn.Module):
 # 모델 초기화 및 하이퍼파라미터 설정
 
 
+# 1. 한국어-영어 데이터셋 pair 생성
+data = [
+    ("안녕하세요", "Hello"),
+    ("감사합니다", "Thank you"),
+    ("좋은 하루 되세요", "Have a nice day"),
+    ("반갑습니다", "Nice to meet you"),
+    ("행운을 빌어요", "Good luck")
+]
 
 # 문자 집합 생성
 kor_chars = set("".join([pair[0] for pair in data]))
-eng_chars = set("".join([pair[1] for pair in data]) + "#")  # 종료 문자 '#' 추가
-
+eng_chars = set("".join([pair[1] for pair in data])).union({"<sos>", "<eos>"})  # 시작 문자('<sos>') 및 종료 문자('<eos>')를 집합에 추가  # 시작 문자('<sos>') 및 종료 문자('<eos>') 추가
+print(eng_chars)
 kor_char2index = {char: index for index, char in enumerate(kor_chars)}
 eng_char2index = {char: index for index, char in enumerate(eng_chars)}
-print("kor_char2index", kor_char2index)
-print("eng_char2index", eng_char2index)
 
 hidden_size = 128
 encoder = Encoder(len(kor_chars), hidden_size)
@@ -75,11 +73,13 @@ for epoch in range(n_epochs):
             encoder_output, encoder_hidden = encoder(input_tensor, encoder_hidden)
 
         # 디코더 학습
-        decoder_input = torch.tensor([[eng_char2index[eng[0]]]])  # 첫 번째 문자를 시작 토큰으로 사용
+        decoder_input = torch.tensor([[eng_char2index["<sos>"]]])  # 시작 문자('<sos>')를 시작 토큰으로 사용
         decoder_hidden = encoder_hidden
-        for char in eng[1:] + "#":  # 끝 문자 다음에 '#'를 추가하여 종료를 나타냄
+        target_chars = list(eng) + ["<eos>"]
+        for target_char in target_chars:  # 종료 문자('<eos>')를 추가하여 종료를 나타냄
             decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
-            target = torch.tensor([eng_char2index[char]])
+            # print("char: ", target_char)
+            target = torch.tensor([eng_char2index[target_char]])
             loss += criterion(decoder_output, target)
             decoder_input = target
 
@@ -101,21 +101,21 @@ def translate(input_sentence):
             input_tensor = torch.tensor([[kor_char2index[char]]])
             _, encoder_hidden = encoder(input_tensor, encoder_hidden)
 
-        translated = "H"  # 'H'를 시작 토큰으로 가정하고 결과 문자열에 추가
-        decoder_input = torch.tensor([[eng_char2index["H"]]])
+        translated = "<sos>"  # '<sos>'를 시작 토큰으로 사용하고 결과 문자열에 추가
+        decoder_input = torch.tensor([[eng_char2index["<sos>"]]])
         decoder_hidden = encoder_hidden
-
+        translate_result = ""
         for _ in range(20):  # 최대 길이 20 설정
             decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
             _, top_index = decoder_output.topk(1)
             translated_char = list(eng_char2index.keys())[list(eng_char2index.values()).index(top_index.item())]
-            if translated_char == "#":  # 종료 문자('#')를 만나면 종료
+            if translated_char == "<eos>":  # 종료 문자('<eos>')를 만나면 종료
                 break
             translated += translated_char
+            translate_result += translated_char
             decoder_input = top_index
 
-        return translated
-
+        return translate_result
 
 for kor, eng in data:
     print(f"{kor} -> {translate(kor)}")
